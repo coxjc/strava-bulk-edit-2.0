@@ -115,6 +115,34 @@ editPanelShoesField.classList.add('form-control');
 editPanelShoesField.innerHTML =  ShoesOptions.innerHTML.replace(/All Shoes/m, "Don't change the shoes");
 editPanelFormGroupShoes.appendChild(editPanelShoesField);
 
+const editPanelFormGroupDateFrom = document.createElement('div');
+editPanelFormGroupDateFrom.classList.add('form-group', 'col-sm-6');
+editPanelBody.appendChild(editPanelFormGroupDateFrom);
+
+const editPanelDateFromLabel = document.createElement('label');
+editPanelDateFromLabel.innerText = 'From date';
+editPanelFormGroupDateFrom.appendChild(editPanelDateFromLabel);
+
+const editPanelDateFromField = document.createElement('input');
+editPanelDateFromField.type = 'date';
+editPanelDateFromField.id = 'strava-bulk-edit-date-from';
+editPanelDateFromField.classList.add('form-control');
+editPanelFormGroupDateFrom.appendChild(editPanelDateFromField);
+
+const editPanelFormGroupDateTo = document.createElement('div');
+editPanelFormGroupDateTo.classList.add('form-group', 'col-sm-6');
+editPanelBody.appendChild(editPanelFormGroupDateTo);
+
+const editPanelDateToLabel = document.createElement('label');
+editPanelDateToLabel.innerText = 'To date';
+editPanelFormGroupDateTo.appendChild(editPanelDateToLabel);
+
+const editPanelDateToField = document.createElement('input');
+editPanelDateToField.type = 'date';
+editPanelDateToField.id = 'strava-bulk-edit-date-to';
+editPanelDateToField.classList.add('form-control');
+editPanelFormGroupDateTo.appendChild(editPanelDateToField);
+
 const editPanelFormGroup = document.createElement('div');
 editPanelFormGroup.classList.add('form-group', 'col-sm-6');
 editPanelBody.appendChild(editPanelFormGroup);
@@ -232,54 +260,56 @@ editPanelSubmit.onclick = function(element) {
     fields.visibility = editPanelVisibilityField.value;
   }
 
+  if (editPanelDateFromField.value !== '') {
+    fields.dateFrom = editPanelDateFromField.value;
+  }
+
+  if (editPanelDateToField.value !== '') {
+    fields.dateTo = editPanelDateToField.value;
+  }
+
   toggleLoadingOverlay();
   setTimeout(updateActivities, 2000, fields);
 }
 
 function updateActivities(fields) {
-  const quickEdit = document.querySelectorAll('.training-activity-row .quick-edit');
-  for (let editButton of quickEdit) {
-    editButton.click();
-  }
+  const rows = document.querySelectorAll('.training-activity-row');
 
-  if (fields.rideType) {
-    const rideType = document.querySelectorAll('.training-activity-row select[name="workout_type_ride"]');
-    for (let rideTypeField of rideType) {
-      rideTypeField.value = fields.rideType;
+  for (let row of rows) {
+    if (!isInDateRange(row, fields.dateFrom, fields.dateTo)) {
+      continue;
     }
-  }
 
-  if (fields.bike) {
-    const bike = document.querySelectorAll('.training-activity-row select[name="bike_id"]');
-    for (let bikeField of bike) {
-      bikeField.value = fields.bike;
+    const editButton = row.querySelector('.quick-edit');
+    if (editButton) editButton.click();
+
+    if (fields.rideType) {
+      const f = row.querySelector('select[name="workout_type_ride"]');
+      if (f) f.value = fields.rideType;
     }
-  }
 
-  if (fields.runType) {
-    const runType = document.querySelectorAll('.training-activity-row select[name="workout_type_run"]');
-    for (let runTypeField of runType) {
-      runTypeField.value = fields.runType;
+    if (fields.bike) {
+      const f = row.querySelector('select[name="bike_id"]');
+      if (f) f.value = fields.bike;
     }
-  }
 
-  if (fields.shoes) {
-    const shoes = document.querySelectorAll('.training-activity-row select[name="athlete_gear_id"]');
-    for (let shoesField of shoes) {
-      shoesField.value = fields.shoes;
+    if (fields.runType) {
+      const f = row.querySelector('select[name="workout_type_run"]');
+      if (f) f.value = fields.runType;
     }
-  }
 
-  if (fields.visibility) {
-    const visibility = document.querySelectorAll('.training-activity-row select[name="visibility"]');
-    for (let visibilityField of visibility) {
-      visibilityField.value = fields.visibility;
+    if (fields.shoes) {
+      const f = row.querySelector('select[name="athlete_gear_id"]');
+      if (f) f.value = fields.shoes;
     }
-  }
 
-  const submit = document.querySelectorAll('.training-activity-row button[type="submit"]');
-  for (let submitButton of submit) {
-    submitButton.click();
+    if (fields.visibility) {
+      const f = row.querySelector('select[name="visibility"]');
+      if (f) f.value = fields.visibility;
+    }
+
+    const submitButton = row.querySelector('button[type="submit"]');
+    if (submitButton) submitButton.click();
   }
 
   const nextButton = document.querySelector('button.next_page');
@@ -293,6 +323,31 @@ function updateActivities(fields) {
   } else {
     toggleLoadingOverlay();
   }
+}
+
+function isInDateRange(row, dateFrom, dateTo) {
+  if (!dateFrom && !dateTo) return true;
+
+  const dateCell = row.querySelector('.col-date');
+  if (!dateCell) return true;
+
+  const parts = dateCell.innerText.trim().split(', ');
+  if (parts.length < 2) return true;
+
+  const activityDate = new Date(parts[1]);
+  if (isNaN(activityDate)) return true;
+
+  if (dateFrom) {
+    const [fy, fm, fd] = dateFrom.split('-').map(Number);
+    if (activityDate < new Date(fy, fm - 1, fd)) return false;
+  }
+
+  if (dateTo) {
+    const [ty, tm, td] = dateTo.split('-').map(Number);
+    if (activityDate > new Date(ty, tm - 1, td)) return false;
+  }
+
+  return true;
 }
 
 function navigateBack() {
