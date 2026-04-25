@@ -50,7 +50,9 @@ editPanelFormGroupRideType.appendChild(editPanelRideTypeLabel);
 const editPanelRideTypeField = document.createElement('select');
 editPanelRideTypeField.id = 'strava-bulk-edit-ride-type';
 editPanelRideTypeField.classList.add('form-control');
-editPanelRideTypeField.innerHTML =  workoutTypeRideOptions.innerHTML.replace(/<option value="">All Ride Types/m, "<option value=\"10\">Ride");
+if (workoutTypeRideOptions) {
+    editPanelRideTypeField.innerHTML = workoutTypeRideOptions.innerHTML.replace(/<option value="">All Ride Types/m, "<option value=\"10\">Ride");
+}
 editPanelFormGroupRideType.appendChild(editPanelRideTypeField);
 
 const editPanelRideTypeDontChange = document.createElement('option');
